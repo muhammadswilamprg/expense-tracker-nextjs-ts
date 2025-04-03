@@ -2,9 +2,10 @@
 
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
+import { Transaction } from "@/types/Transaction";
 
 async function getTransaction(): Promise<{
-    balance?: number;
+    transactions?: Transaction[];
     error?: string
 }> {
     const { userId } = await auth() 
@@ -13,10 +14,12 @@ async function getTransaction(): Promise<{
     }
     try {
         const transactions = await db.transaction.findMany({
-            where: {userId }
+            where: { userId },
+            orderBy: {
+                createdAt: 'desc',
+            }
         })
-        const balance = transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
-        return { balance }
+        return { transactions };
     } catch (error) {
         return {error: 'Database Error'}
     }
